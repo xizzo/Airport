@@ -17,6 +17,7 @@ namespace Airport
 
         public static List<Player> Players = new List<Player>();
         public static List<Structure.Vehicle> Vehicles = new List<Structure.Vehicle>();
+        public static List<Item> Items = new List<Item>();
         public double currUpdateTick = 0;
         private int ClearVehicleAfterTicks = 10;
 
@@ -33,8 +34,12 @@ namespace Airport
                 API.onPlayerDisconnected += onPlayerDisconnected;
                 API.onVehicleDeath += onVehicleDeath;
                 API.onPlayerEnterVehicle += onPlayerEnterVehicle;
+                API.onPlayerPickup += onPlayerPickup;
+
                 GetAllVehicleData();
+                GetAllPickupData();
                 SpawnAllVehicles();
+                SpawnAllPickupItems();
             }
 
         #endregion
@@ -43,7 +48,7 @@ namespace Airport
 
             public void onPlayerConnected(Client sender)
             {
-                Players.Add(new Player(sender));
+                Players.Add(new Player(sender, sender.handle));
                 API.setPlayerSkin(sender, (PedHash)(-308279251));
                 SetupPlayerSpawn(sender);
                 API.sendChatMessageToAll(sender.name + " connected to the server!");
@@ -86,7 +91,7 @@ namespace Airport
             public void onResourceStart()
             {
                 API.consoleOutput("Airport strip script loaded");
-                API.setWeather(11);
+                API.setWeather(1);
                 API.setTime(10, 0);
             }
 
@@ -119,6 +124,24 @@ namespace Airport
                 API.setEntityData(vehicle, "CleanupTicks", 0);
             }
 
+            public void onPlayerPickup(Client sender, NetHandle pickup)
+            {
+                API.sendChatMessageToPlayer(sender, "pickup");
+                foreach (Item item in Items)
+                {
+                    if (item.netHandle == pickup)
+                    {
+                        API.sendChatMessageToPlayer(sender, "found item");
+                        switch(item.itemType){
+                            case "PICKUP_WEAPON_ASSAULTRIFLE":
+                                API.sendChatMessageToPlayer(sender, "found wep");
+                                API.givePlayerWeapon(sender, (WeaponHash)(-1074790547), 999, false, false);
+                                break;
+                        }
+                    }
+                }
+            }
+
         #endregion
 
         #region "Commands"
@@ -144,7 +167,7 @@ namespace Airport
                 }
             }
 
-            [Command("car")]
+            [Command("v")]
             public void SpawnCarCommand(Client sender, VehicleHash model)
             {
                 Player p = GetPlayerClientObj(sender); 
@@ -169,6 +192,18 @@ namespace Airport
 
         #region "Functions"
 
+            private Player GetPlayerClientObjByHandle(NetHandle handle)
+            {
+                foreach (Player p in Players)
+                {
+                    if (p.netHandle == handle)
+                    {
+                        return p;
+                    }
+                }
+                return new Player();
+            }
+
             private Player GetPlayerClientObj(Client sender)
             {
                 foreach (Player p in Players)
@@ -185,6 +220,7 @@ namespace Airport
             {
                 API.setEntityPosition(sender.handle, new Vector3(1691.427, 3285.981, 41.14657));
                 API.setEntityRotation(sender.handle, new Vector3(0, 0, -146.1883));
+                API.givePlayerWeapon(sender, (WeaponHash)(-1074790547), 999, false, false);
             }
 
             private void GetAllVehicleData()
@@ -207,6 +243,24 @@ namespace Airport
                 }
             }
 
+            private void GetAllPickupData()
+            {
+                using (StreamReader rdr = new StreamReader(@"resources\airportstrip\pickups.txt"))
+                {
+                    while (!rdr.EndOfStream)
+                    {
+                        string s = rdr.ReadLine();
+                        string[] pickupData = s.Split(';');
+                        Vector3 pos = new Vector3(double.Parse(pickupData[1]), double.Parse(pickupData[2]), double.Parse(pickupData[3]));
+                        Vector3 rot = new Vector3(double.Parse(pickupData[4]), double.Parse(pickupData[5]), double.Parse(pickupData[6]));
+                        PickupHash modelPickup = (PickupHash)API.getHashKey(pickupData[0]);                       
+
+                        Item item = new Item(modelPickup, pos, rot, 5, pickupData[0]);
+                        Items.Add(item);
+                    }
+                }
+            }
+
             private void SpawnAllVehicles()
             {
                 API.consoleOutput("Spawning all vehicles");
@@ -222,10 +276,23 @@ namespace Airport
                     API.setEntityData(car, "SPAWN_POS", veh.position);
                     API.setEntityData(car, "SPAWN_ROT", veh.rotation);
                     API.setEntityData(car, "HasBeenUsed", false);
-                    API.setEntityData(car, "CleanupTicks", 0);
-
+                    API.setEntityData(car, "CleanupTicks", 0);                 
                 }
 
+            }
+
+            private void SpawnAllPickupItems()
+            {
+                API.consoleOutput("Spawning all items");
+                foreach(NetHandle p in API.getAllPickups())
+                {
+                    API.deleteEntity(p);
+                }
+
+                foreach (Item item in Items)
+                {
+                    item.netHandle = API.createPickup(item.model, item.pos, item.rot, 1, item.respawnTime);            
+                }
             }
 
             private void DoVehicleCleanup()

@@ -11,6 +11,7 @@ namespace Airport.Structure
     public class Player
     {
         public Client client { get; set; }
+        public NetHandle netHandle { get; set; }
         public NetHandle vehicle { get; set; }
         public bool hasVehicle { get; set; }
 
@@ -19,9 +20,10 @@ namespace Airport.Structure
             this.hasVehicle = false;
         }
 
-        public Player(Client client)
+        public Player(Client client, NetHandle netHandle)
         {
             this.client = client;
+            this.netHandle = netHandle;
             this.hasVehicle = false;
         }
     }
