@@ -49,7 +49,7 @@ namespace Airport
             public void onPlayerConnected(Client sender)
             {
                 Players.Add(new Player(sender, sender.handle));
-                API.setPlayerSkin(sender, (PedHash)(-308279251));
+                API.setPlayerSkin(sender, (PedHash)(788443093));
                 SetupPlayerSpawn(sender);
                 API.sendChatMessageToAll(sender.name + " connected to the server!");
             }
@@ -91,8 +91,8 @@ namespace Airport
             public void onResourceStart()
             {
                 API.consoleOutput("Airport strip script loaded");
-                API.setWeather(1);
-                API.setTime(10, 0);
+                API.setWeather(11);
+                API.setTime(5, 0);
             }
 
             public void onVehicleDeath(NetHandle vehicle)
@@ -218,9 +218,12 @@ namespace Airport
 
             private void SetupPlayerSpawn(Client sender)
             {
-                API.setEntityPosition(sender.handle, new Vector3(1691.427, 3285.981, 41.14657));
-                API.setEntityRotation(sender.handle, new Vector3(0, 0, -146.1883));
-                API.givePlayerWeapon(sender, (WeaponHash)(-1074790547), 999, false, false);
+                // API.setEntityPosition(sender.handle, new Vector3(1691.427, 3285.981, 41.14657));
+                // API.setEntityRotation(sender.handle, new Vector3(0, 0, -146.1883));
+                API.setEntityPosition(sender.handle, new Vector3(-276.4822, -891.2561, 1066.544));
+                API.setEntityRotation(sender.handle, new Vector3(-5.371634, 7.375679, 19.1878));
+               // API.givePlayerWeapon(sender, (WeaponHash)(-1074790547), 999, false, false);
+                API.givePlayerWeapon(sender, (WeaponHash)(-72657034), 1, true, true);
             }
 
             private void GetAllVehicleData()
@@ -276,7 +279,7 @@ namespace Airport
                     API.setEntityData(car, "SPAWN_POS", veh.position);
                     API.setEntityData(car, "SPAWN_ROT", veh.rotation);
                     API.setEntityData(car, "HasBeenUsed", false);
-                    API.setEntityData(car, "CleanupTicks", 0);                 
+                    API.setEntityData(car, "CleanupTicks", 0);
                 }
 
             }
